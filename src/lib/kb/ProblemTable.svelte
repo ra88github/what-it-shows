@@ -9,7 +9,8 @@
   let { ticket, repo, issues = {} }: { ticket: number; repo: string; issues?: Partial<Record<Problem, number>> } = $props();
 
   const split = $derived(splitTicket(reports as Report[], ticket, tenantOf, notes.oneDayMove));
-  const total = $derived(split.groups.reduce((n, g) => n + g.reports.length, 0));
+  const rows = $derived(split.oneDay ? [...split.causes, split.oneDay] : split.causes);
+  const filed = $derived(split.causes.reduce((n, g) => n + g.reports.length, 0));
   const list = (n: Record<string, number>) =>
     Object.entries(n)
       .sort((a, b) => b[1] - a[1])
@@ -19,8 +20,8 @@
 
 <p class="sum">
   <strong>{split.reports.length}</strong> reports in #{ticket} ·
-  <strong>{split.groups.length}</strong>
-  {split.groups.length === 1 ? 'problem' : 'problems'}
+  <strong>{rows.length}</strong>
+  {rows.length === 1 ? 'problem' : 'problems'}
 </p>
 
 <table>
@@ -28,9 +29,17 @@
     <tr><th>problem</th><th>reports</th><th>channels</th><th>intake tagged as</th><th>tenants</th><th>seen</th><th>ticket</th></tr>
   </thead>
   <tbody>
-    {#each split.groups as g (g.problem)}
-      <tr>
-        <td><code>{g.problem}</code><br /><span class="what">{PROBLEM_TITLE[g.problem]}</span></td>
+    {#each rows as g (g.problem)}
+      <tr class:extra={g.problem === 'one-day'}>
+        <td>
+          <code>{g.problem}</code><br /><span class="what">{PROBLEM_TITLE[g.problem]}</span>
+          {#if g.problem !== 'one-day' && g.readAsOneDay}
+            <br /><span class="what">includes {g.readAsOneDay} read as a one-day move</span>
+          {/if}
+          {#if g.problem === 'one-day'}
+            <br /><span class="what">also counted under the cause they are filed by</span>
+          {/if}
+        </td>
         <td class="n">{g.reports.length}</td>
         <td class="tags">{list(g.channels)}</td>
         <td class="tags">{list(g.taggedAs)}</td>
@@ -47,15 +56,17 @@
     {/each}
   </tbody>
   <tfoot>
-    <tr><td>total</td><td class="n">{total}</td><td colspan="5" class:off={total !== split.reports.length}>
-      {total === split.reports.length ? `every report in #${ticket} is in exactly one problem` : `does not match the ${split.reports.length} reports in #${ticket}`}
+    <tr><td>filed by cause</td><td class="n">{filed}</td><td colspan="5" class:off={filed !== split.reports.length}>
+      {filed === split.reports.length ? `every report in #${ticket} is under exactly one cause` : `does not match the ${split.reports.length} reports in #${ticket}`}
     </td></tr>
   </tfoot>
 </table>
 
 <p class="note">
-  Counted by report id: the export has {split.rows} rows for #{ticket}, and {split.rows - split.reports.length} of them repeat a report.
-  Intake's tag disagrees with the tenant's cause on {split.mistagged} reports.
+  Counted the desk's way: by report id (the export has {split.rows} rows for #{ticket}, and
+  {split.rows - split.reports.length} of them repeat a report), and each report under the cause its tenant and channel give it.
+  Reports the desk read as a one-day move stay counted there and get a row of their own.
+  Intake's tag disagrees with that cause on {split.mistagged} reports.
 </p>
 
 <style>
@@ -65,6 +76,7 @@
   .n { font-variant-numeric: tabular-nums; }
   .none { color: var(--warn); }
   .off { color: var(--warn); font-weight: 600; }
+  .extra td { border-top: 2px solid var(--line); }
   tfoot td { font-weight: 600; border-bottom: 0; }
   .note { color: var(--muted); font-size: 0.85em; }
 </style>

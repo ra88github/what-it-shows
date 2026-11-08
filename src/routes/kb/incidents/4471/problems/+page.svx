@@ -39,8 +39,8 @@ tenants' app and email reports are `parser`.
 A client in Lisbon gets Tuesday and a client in Toronto gets Monday for the same meeting. An
 invite arrives before the booking was made. A month/day swap cannot do any of that; it points to
 a date passed through a time zone. The desk had already listed these reports as a one-day move
-(`desk-notes.json`), but the cause table on #4471 still counts them under `parser`, because their
-tenants write the day first.
+(`desk-notes.json`). Like the cause table on #4471, this page still counts them under `parser`,
+where their tenants file them, and gives them a row and a ticket of their own as well.
 
 ## Why the queue hid them
 
@@ -53,7 +53,7 @@ tenants write the day first.
   twice. Every count on this page is by report id.
 
 <Callout kind="warn">
-"Known. One issue, one fix queued." no longer holds. The queued fix covers the parser row only.
+"Known. One issue, one fix queued." no longer holds. The queued parser fix leaves the hint and one-day reports open.
 </Callout>
 
 ## For the desk
