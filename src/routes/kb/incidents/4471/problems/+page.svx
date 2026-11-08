@@ -13,34 +13,39 @@ signature: v1.eyJzdWIiOiI1MzUxIiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYX
   import RenderStamp from '#lib/kb/RenderStamp.svelte';
 </script>
 
-[#4471](/kb/incidents/4471) is marked known: one parser bug, one fix queued. It was built by
-merging on subject lines ([decision 0001](/kb/decisions/0001-dedupe-by-subject)), so it holds
-every report that sounded alike. Read by tenant, booking form and body, it holds more than one
-problem. Each one below has a ticket of its own.
+[#4471](/kb/incidents/4471) was filed as one parser bug. It was built by merging on subject
+lines ([decision 0001](/kb/decisions/0001-dedupe-by-subject)), so it holds every report that
+sounded alike. Read by tenant, booking form and body, it holds more than one problem. Each one
+below has a ticket of its own.
+
+Engineering closed #4471 on 5 October: the parser fix shipped ("fix(dates): parse dd/mm for eu
+locales"), and the hint won't be fixed because the booking-v3 form is retired. Neither change
+touches the one-day move, so its ticket stays open.
 
 ## The problems
 
-<ProblemTable ticket={4471} repo="ra88github/what-it-shows" issues={{ parser: 1, hint: 2, 'one-day': 3 }} />
+<ProblemTable ticket={4471} repo="ra88github/what-it-shows" issues={{ parser: 1, hint: 2, 'one-day': 3 }} outcome={{ parser: 'fixed', hint: "won't fix: booking-v3 retired" }} />
 
 ## How they were told apart
 
 **parser.** The tenant writes the day first, and the report came in through the app, by email,
 or through a booking-v2 form, whose hint asks for DD/MM/YYYY. The shared parser reads every date
 month first, so day and month swap: a 7 April reminder goes out on 4 July. This is the bug #4471
-describes, and the queued fix is for it.
+describes. Fixed: the parser now reads day-first dates for EU locales.
 
 **hint.** The tenant runs booking-v3. Its form prints MM/DD/YYYY under the date field, people
 type the month first as told, and the form reads the date the tenant's way, day first. The
-symptom is the same swap, but the fix is in the form, not the parser, so the queued parser fix
-leaves these reports open. Only reports that came through the form belong here: the same
-tenants' app and email reports are `parser`.
+symptom is the same swap, but the cause is the form, not the parser, so the parser fix does not
+reach these reports. Won't fix: booking-v3 is retired. Only reports that came through the form
+belong here: the same tenants' app and email reports are `parser`.
 
 **one-day.** These dates move by one day, not by a swap. Tuesday 12 May shows as Monday 11 May.
 A client in Lisbon gets Tuesday and a client in Toronto gets Monday for the same meeting. An
 invite arrives before the booking was made. A month/day swap cannot do any of that; it points to
 a date passed through a time zone. The desk had already listed these reports as a one-day move
 (`desk-notes.json`). Like the cause table on #4471, this page still counts them under `parser`,
-where their tenants file them, and gives them a row and a ticket of their own as well.
+where their tenants file them, and gives them a row and a ticket of their own as well. The
+parser fix does not change a time zone, so these stay open after #4471 closed.
 
 ## Why the queue hid them
 
@@ -53,7 +58,7 @@ where their tenants file them, and gives them a row and a ticket of their own as
   twice. Every count on this page is by report id.
 
 <Callout kind="warn">
-"Known. One issue, one fix queued." no longer holds. The queued parser fix leaves the hint and one-day reports open.
+#4471 is closed, but not everything in it is fixed. The one-day move is still open, on its own ticket.
 </Callout>
 
 ## For the desk
@@ -61,7 +66,7 @@ where their tenants file them, and gives them a row and a ticket of their own as
 - Triage by cause, not by subject. Tenant, channel and booking form decide the cause, and the
   body can overrule them: a one-day move is never a swap. That needs a new decision record to
   replace 0001, which stays as it was accepted.
-- When the parser fix ships, check this table again before closing anything. The hint and
-  one-day rows stay open until their own fixes ship.
+- Closing a merged ticket closes only what its fixes reach. Check every row of this table
+  against what shipped before closing the rest: here the one-day move is still open.
 
 <RenderStamp {signature} />

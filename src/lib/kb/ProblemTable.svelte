@@ -6,7 +6,13 @@
   import { PROBLEM_TITLE, splitTicket, type Problem } from '#lib/kb/problems';
 
   // `issues`: the ticket each problem was filed as, in `repo` (owner/name on GitHub).
-  let { ticket, repo, issues = {} }: { ticket: number; repo: string; issues?: Partial<Record<Problem, number>> } = $props();
+  // `outcome`: what engineering did about a problem; a problem without one is still open.
+  let {
+    ticket,
+    repo,
+    issues = {},
+    outcome = {},
+  }: { ticket: number; repo: string; issues?: Partial<Record<Problem, number>>; outcome?: Partial<Record<Problem, string>> } = $props();
 
   const split = $derived(splitTicket(reports as Report[], ticket, tenantOf, notes.oneDayMove));
   const rows = $derived(split.oneDay ? [...split.causes, split.oneDay] : split.causes);
@@ -26,7 +32,7 @@
 
 <table>
   <thead>
-    <tr><th>problem</th><th>reports</th><th>channels</th><th>intake tagged as</th><th>tenants</th><th>seen</th><th>ticket</th></tr>
+    <tr><th>problem</th><th>reports</th><th>channels</th><th>intake tagged as</th><th>tenants</th><th>seen</th><th>ticket</th><th>state</th></tr>
   </thead>
   <tbody>
     {#each rows as g (g.problem)}
@@ -52,11 +58,12 @@
             <span class="none">no ticket yet</span>
           {/if}
         </td>
+        <td class:open={!outcome[g.problem]}>{outcome[g.problem] ?? 'open'}</td>
       </tr>
     {/each}
   </tbody>
   <tfoot>
-    <tr><td>filed by cause</td><td class="n">{filed}</td><td colspan="5" class:off={filed !== split.reports.length}>
+    <tr><td>filed by cause</td><td class="n">{filed}</td><td colspan="6" class:off={filed !== split.reports.length}>
       {filed === split.reports.length ? `every report in #${ticket} is under exactly one cause` : `does not match the ${split.reports.length} reports in #${ticket}`}
     </td></tr>
   </tfoot>
@@ -76,6 +83,7 @@
   .n { font-variant-numeric: tabular-nums; }
   .none { color: var(--warn); }
   .off { color: var(--warn); font-weight: 600; }
+  .open { color: var(--warn); font-weight: 600; }
   .extra td { border-top: 2px solid var(--line); }
   tfoot td { font-weight: 600; border-bottom: 0; }
   .note { color: var(--muted); font-size: 0.85em; }
