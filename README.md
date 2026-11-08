@@ -34,3 +34,16 @@ Support desk. Decision records: whoever signed them.
 ---
 
 Exported 2026-10-04 from the `support` repo, `apps/kb/` → `src/`.
+
+## This copy
+
+The export above, unchanged, plus:
+
+- `src/routes/kb/incidents/4471/problems/+page.svx`: a page that splits #4471 into the problems it
+  holds. Built: [`build/kb/incidents/4471/problems.html`](build/kb/incidents/4471/problems.html).
+- `src/lib/kb/problems.ts` and `src/lib/kb/ProblemTable.svelte`: the logic and the table that
+  page uses. Every count on the page is computed from `src/lib/data/` at build time.
+- The build setup the export left out: `package.json`, `svelte.config.js`, `vite.config.js`,
+  `src/app.html`, `src/routes/+layout.js`. Run `npm ci && npm run build`; the site lands in `build/`.
+
+Each problem is filed as an issue in this repo.

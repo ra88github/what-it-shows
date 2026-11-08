@@ -1,0 +1,67 @@
+---
+layout: runbook
+title: '#4471 · the problems inside one ticket'
+owner: support desk
+status: open
+reviewed: 2026-11-08
+signature: v1.eyJzdWIiOiI1MzUxIiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYXQiOjE3OTQxNTMzMDYsImV4cCI6MTc5NDIzOTcwNn0.1rn1CJHvRXu5YRKOynr9mrG7Fgwl08l3xSZE1nKgCtw
+---
+
+<script>
+  import ProblemTable from '#lib/kb/ProblemTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+</script>
+
+[#4471](/kb/incidents/4471) is marked known: one parser bug, one fix queued. It was built by
+merging on subject lines ([decision 0001](/kb/decisions/0001-dedupe-by-subject)), so it holds
+every report that sounded alike. Read by tenant, booking form and body, it holds more than one
+problem. Each one below has a ticket of its own.
+
+## The problems
+
+<ProblemTable ticket={4471} repo="ra88github/what-it-shows" issues={{ parser: 1, hint: 2, 'one-day': 3 }} />
+
+## How they were told apart
+
+**parser.** The tenant writes the day first, and the report came in through the app, by email,
+or through a booking-v2 form, whose hint asks for DD/MM/YYYY. The shared parser reads every date
+month first, so day and month swap: a 7 April reminder goes out on 4 July. This is the bug #4471
+describes, and the queued fix is for it.
+
+**hint.** The tenant runs booking-v3. Its form prints MM/DD/YYYY under the date field, people
+type the month first as told, and the form reads the date the tenant's way, day first. The
+symptom is the same swap, but the fix is in the form, not the parser, so the queued parser fix
+leaves these reports open. Only reports that came through the form belong here: the same
+tenants' app and email reports are `parser`.
+
+**one-day.** These dates move by one day, not by a swap. Tuesday 12 May shows as Monday 11 May.
+A client in Lisbon gets Tuesday and a client in Toronto gets Monday for the same meeting. An
+invite arrives before the booking was made. A month/day swap cannot do any of that; it points to
+a date passed through a time zone. The desk had already listed these reports as a one-day move
+(`desk-notes.json`), but the cause table on #4471 still counts them under `parser`, because their
+tenants write the day first.
+
+## Why the queue hid them
+
+- **Subject lines.** Merging on subject joins reports that sound alike, whatever their cause.
+  Different bugs make people write the same words: "wrong day", "date is wrong".
+- **Intake tags.** Intake tags a report from the reporter's browser. The cause depends on the
+  tenant: where they are and which booking form they run. The *intake tagged as* column shows how
+  far the two drift.
+- **Repeated rows.** The ticket system exports in pages that overlap, so a report can appear
+  twice. Every count on this page is by report id.
+
+<Callout kind="warn">
+"Known. One issue, one fix queued." no longer holds. The queued fix covers the parser row only.
+</Callout>
+
+## For the desk
+
+- Triage by cause, not by subject. Tenant, channel and booking form decide the cause, and the
+  body can overrule them: a one-day move is never a swap. That needs a new decision record to
+  replace 0001, which stays as it was accepted.
+- When the parser fix ships, check this table again before closing anything. The hint and
+  one-day rows stay open until their own fixes ship.
+
+<RenderStamp {signature} />
